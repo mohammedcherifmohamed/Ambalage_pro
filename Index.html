@@ -301,4 +301,79 @@
             let grid = document.getElementById('productsGrid');
             if(grid) grid.innerHTML = filtered.map(p => `
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden card-hover p-4 transition-smooth">
-                    <div class="text-6xl text-center">${p.i
+                    <div class="text-6xl text-center">${p.image}</div>
+                    <div class="mt-2"><span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">${p.badge?p.badge:''}</span> ${p.isNew?'<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-1">Nouveau</span>':''}</div>
+                    <h3 class="font-bold text-xl">${p.name}</h3>
+                    <p class="text-gray-500 text-sm">${p.dimensions} | ${p.weightCapacity}</p>
+                    <p class="text-sm mt-1">${p.desc}</p>
+                    <div class="flex justify-between items-center mt-4"><span class="text-orange-600 font-bold text-xl">${p.price} DA</span><button onclick='addToCartById(${p.id})' class="bg-indigo-800 text-white px-4 py-2 rounded-full text-sm hover:bg-indigo-700"><i class="fas fa-cart-plus"></i> Ajouter</button></div>
+                </div>
+            `).join('');
+        }
+        window.addToCartById = (id) => { let prod = products.find(p=>p.id===id); if(prod) addToCart(prod,1); };
+        // Filter events
+        document.getElementById('categoryFilter')?.addEventListener('change',renderProducts);
+        document.getElementById('priceRange')?.addEventListener('input',(e)=>{document.getElementById('priceVal').innerText=e.target.value+" DA"; renderProducts();});
+        document.getElementById('searchInput')?.addEventListener('input',renderProducts);
+        
+        // Configurateur dynamique
+        function updateConfigurator(){
+            let l=parseFloat(document.getElementById('len').value)||0;
+            let w=parseFloat(document.getElementById('wid').value)||0;
+            let h=parseFloat(document.getElementById('hei').value)||0;
+            let vol = l*w*h;
+            let typeFactor = document.getElementById('cartonType').value === 'renforce' ? 1.4 : 1;
+            let thickness = parseInt(document.getElementById('thickness').value);
+            let color = document.getElementById('colorSelect').value;
+            let print = document.getElementById('customPrint').checked ? 250 : 0;
+            let basePrice = (l+w+h)*2.5 * typeFactor + thickness*5;
+            basePrice = Math.max(200, basePrice);
+            let finalPrice = Math.floor(basePrice + print);
+            document.getElementById('volumeCalc').innerText = vol;
+            document.getElementById('estimatedPrice').innerHTML = finalPrice + " DA";
+            let rec = "Usage général";
+            if(vol>30000) rec="Pour objets volumineux";
+            else if(vol<5000) rec="Petits accessoires";
+            document.getElementById('recommendMsg').innerText = rec;
+            window.currentCustom = { name:`Carton sur mesure ${l}x${w}x${h}`, price:finalPrice, dimensions:`${l}x${w}x${h} cm`, weightCapacity:"Sur mesure", desc:"Personnalisé", id:Date.now(), isCustom:true };
+        }
+        document.getElementById('len')?.addEventListener('input',updateConfigurator);
+        document.getElementById('wid')?.addEventListener('input',updateConfigurator);
+        document.getElementById('hei')?.addEventListener('input',updateConfigurator);
+        document.getElementById('cartonType')?.addEventListener('change',updateConfigurator);
+        document.getElementById('thickness')?.addEventListener('change',updateConfigurator);
+        document.getElementById('colorSelect')?.addEventListener('change',updateConfigurator);
+        document.getElementById('customPrint')?.addEventListener('change',updateConfigurator);
+        document.getElementById('addCustomToCart')?.addEventListener('click',()=>{ if(window.currentCustom) addToCart(window.currentCustom,1,true); else addToCart({id:Date.now(), name:"Carton perso", price:500},1)});
+        updateConfigurator();
+
+        // Statistiques avec compteurs
+        function animateNumbers(){
+            document.querySelectorAll('.stat-number').forEach(el=>{
+                let target = parseInt(el.getAttribute('data-target'));
+                let current=0;
+                let increment = target/50;
+                let timer = setInterval(()=>{ current+=increment; if(current>=target){ el.innerText=target; clearInterval(timer); } else el.innerText=Math.floor(current); },30);
+            });
+        }
+        setTimeout(animateNumbers,500);
+        
+        // Cart Sidebar UI
+        document.getElementById('cartIconBtn')?.addEventListener('click',()=>document.getElementById('cartSidebar').classList.remove('translate-x-full'));
+        document.getElementById('closeCartBtn')?.addEventListener('click',()=>document.getElementById('cartSidebar').classList.add('translate-x-full'));
+        updateCartUI();
+
+        // Dark mode toggle
+        const toggleDark = () => {
+            darkMode = !darkMode;
+            if(darkMode) document.body.classList.add('dark-mode');
+            else document.body.classList.remove('dark-mode');
+        };
+        document.getElementById('darkModeToggle')?.addEventListener('click',toggleDark);
+        document.getElementById('darkMobileToggle')?.addEventListener('click',toggleDark);
+        // contact prevent default
+        document.getElementById('contactForm')?.addEventListener('submit',(e)=>{ e.preventDefault(); showToast("Message envoyé !"); });
+        renderProducts();
+    </script>
+</body>
+</html>
