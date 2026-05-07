@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoxPro Admin | Dashboard Intelligence Emballage</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <!-- html2pdf for PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0B1120; }
+        .sidebar-transition { transition: transform 0.3s ease-in-out; }
+        .card-hover { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -12px rgba(0,0,0,0.4); }
+        .stat-number { transition: all 0.3s; }
+        .toast-notify {
+            position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+            background: #1F2937; backdrop-filter: blur(8px); color: white;
+            padding: 12px 20px; border-radius: 40px; display: flex; align-items: center;
+            gap: 12px; transform: translateX(400px); transition: transform 0.3s ease;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+        }
+        .toast-notify.show { transform: translateX(0); }
+        .skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 12px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .badge-status { @apply px-2 py-1 rounded-full text-xs font-semibold; }
+        .insight-card { border-left: 4px solid #F97316; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1E293B; }
+        ::-webkit-scrollbar-thumb { background: #F97316; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast-notify"><i class="fas fa-bell text-orange-400"></i><span id="toastMsg">Notification</span></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="w-72 bg-gray-900/80 backdrop-blur-sm border-r border-gray-800 flex flex-col fixed h-full z-30 transition-all duration-300 -translate-x-full md:translate-x-0">
+            <div class="p-6 border-b border-gray-800">
+                <div class="text-2xl font-bold"><span class="text-orange-500">Box</span><span class="text-white">Pro</span> <span class="text-xs text-gray-400">Admin</span></div>
+                <p class="text-xs text-gray-500 mt-1">Solutions d'emballage Algérie</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-600/20 text-orange-400"><i class="fas fa-chart-line w-5"></i> Dashboard</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><i class="fas fa-box w-5"></i> Produits</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><i class="fas fa-shopping-cart w-5"></i> Commandes</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><i class="fas fa-users w-5"></i> Clients</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><i class="fas fa-chart-pie w-5"></i> Analyses</a>
+            </nav>
+            <div class="p-4 border-t border-gray-800 text-xs text-gray-500">© 2025 BoxPro Intelligence</div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="flex-1 md:ml-72 overflow-y-auto">
+            <!-- NAVBAR -->
+            <nav class="sticky top-0 z-20 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+                <button id="mobileMenuBtn" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+                <div class="relative w-96 hidden md:block"><i class="fas fa-search absolute left-3 top-3 text-gray-500"></i><input type="text" id="globalSearch" placeholder="Rechercher commande, client..." class="w-full bg-gray-800 rounded-full py-2 pl-10 pr-4 text-sm border border-gray-700 focus:outline-none focus:border-orange-500"></div>
+                <div class="flex gap-4"><button id="darkModeToggle" class="bg-gray-800 p-2 rounded-full"><i class="fas fa-moon"></i></button><div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center"><span class="text-sm font-bold">AD</span></div></div>
+            </nav>
+
+            <div class="p-6">
+                <!-- STATS CARDS (animated counters) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8" id="statsGrid"></div>
+                
+                <!-- SECTION: GRAPHIQUES & PRODUITS -->
+                <div class="grid lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 bg-gray-800/50 rounded-2xl p-5 border border-gray-700"><h3 class="font-bold mb-3">📈 Évolution des ventes (30 jours)</h3><canvas id="salesLineChart" height="200"></canvas></div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700"><h3 class="font-bold mb-3">🥧 Produits les plus vendus</h3><canvas id="topProductsDoughnut" height="200"></canvas></div>
+                </div>
+
+                <!-- STATS PRODUITS + TABLEAUX -->
+                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-bold text-lg mb-4">📊 Performance produits</h3>
+                        <div id="productStatsTable" class="space-y-4"></div>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-bold text-lg mb-4">🕒 Heures d'achat & sources</h3>
+                        <canvas id="hourlyBarChart" height="150"></canvas>
+                        <canvas id="sourceDoughnut" height="150" class="mt-4"></canvas>
+                    </div>
+                </div>
+
+                <!-- COMMANDES RECENTES & INSIGHTS -->
+                <div class="grid lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <div class="flex justify-between"><h3 class="font-bold">🛒 Commandes récentes</h3><div><button id="exportPdfBtn" class="text-xs bg-gray-700 px-3 py-1 rounded"><i class="fas fa-file-pdf"></i> PDF</button><button id="exportExcelBtn" class="text-xs bg-gray-700 px-3 py-1 rounded ml-2"><i class="fas fa-file-excel"></i> Excel</button></div></div>
+                        <div class="overflow-x-auto mt-3"><table class="w-full text-sm" id="ordersTable"><thead><tr class="border-b border-gray-700"><th>ID</th><th>Client</th><th>Montant</th><th>Statut</th><th>Action</th></tr></thead><tbody id="ordersList"></tbody></table></div>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-bold">💡 Insights intelligents</h3>
+                        <div id="insightsContainer" class="mt-3 space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- ANALYSE CLIENTS -->
+                <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700 mb-8">
+                    <h3 class="font-bold text-lg mb-3">👥 Analyse Clients Fidélité</h3>
+                    <input type="text" id="clientSearch" placeholder="Rechercher client..." class="bg-gray-700 rounded-full px-4 py-2 w-full md:w-64 text-sm mb-4">
+                    <div id="clientAnalytics" class="grid md:grid-cols-4 gap-4"></div>
+                    <div id="clientTable" class="mt-4 overflow-x-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ------------------------------ MOCK DATA (Advanced) ------------------------------
+        const mockSalesHistory = [12500, 14200, 13800, 21000, 24500, 23800, 29000, 32500, 34000, 37200, 41000, 39800, 42500, 46700, 51200, 54300, 58900, 61200, 67800, 70200, 73400, 76800, 81000, 84500, 90200, 94500, 98000, 102300, 108400, 114200];
+        const monthlyRevenue = [124000, 142000, 168000, 205000, 289000, 312000];
+        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'];
+        const topProductsList = [{name:"Carton XL 50x40x30", units:1240, revenue: 456000},{name:"Boîte Premium Noir", units:980, revenue: 387000},{name:"Emballage Electronique", units:730, revenue: 295000}];
+        const categoryOrders = { "Expédition": 340, "E-commerce": 520, "Premium": 290, "Sécurisé": 180 };
+        const hourlyData = Array(24).fill().map((_,i)=> Math.floor(Math.random() * 80) + (i>8 && i<20 ? 40 : 10));
+        const visitorsSource = { "Recherche Google": 45, "Direct": 28, "Instagram": 15, "Recommandation": 12 };
+        
+        // Clients Mock
+        const clients = [
+            { id:1, name:"SARL Emballec DZ", email:"contact@emballec.dz", totalSpent:124500, orders:14, lastOrder:"2025-04-28", status:"fidèle"},
+            { id:2, name:"EURL TechBox", email:"tech@box.dz", totalSpent:78900, orders:8, lastOrder:"2025-05-01", status:"fidèle"},
+            { id:3, name:"Sarl Mode Algérie", email:"mode@dz.com", totalSpent:3400, orders:2, lastOrder:"2025-01-15", status:"inactif"},
+            { id:4, name:"Startup Ecom Express", email:"startup@ecom.dz", totalSpent:45600, orders:6, lastOrder:"2025-05-03", status:"nouveau"},
+            { id:5, name:"Mega Distribution", email:"contact@mega.dz", totalSpent:203400, orders:27, lastOrder:"2025-05-05", status:"fidèle"},
+        ];
+        
+        let orders = [
+            { id:"ORD-1001", client:"SARL Emballec DZ", amount:12450, status:"livrée", date:"2025-05-05"},
+            { id:"ORD-1002", client:"EURL TechBox", amount:8900, status:"expédiée", date:"2025-05-04"},
+            { id:"ORD-1003", client:"Startup Ecom Express", amount:2300, status:"confirmée", date:"2025-05-05"},
+            { id:"ORD-1004", client:"Mega Distribution", amount:32100, status:"en_attente", date:"2025-05-06"},
+            { id:"ORD-1005", client:"Sarl Mode Algérie", amount:1200, status:"annulée", date:"2025-04-20"}
+        ];
+        
+        // Inventory more
+        const productPerformance = [
+            { name: "Carton XL", sold: 1240, views: 3540, profit: 187000, stock: 320, performance: "top" },
+            { name: "Boîte Premium", sold: 980, views: 2100, profit: 143000, stock: 45, performance: "top" },
+            { name: "Carton Électronique", sold: 730, views: 1890, profit: 95000, stock: 12, performance: "warning" },
+            { name: "Emballage Vêtements", sold: 210, views: 890, profit: 18700, stock: 3, performance: "low" }
+        ];
+        
+        let notificationList = [];
+        
+        // ----- Helper DOM & Utilities
+        function showToast(msg){ let t=document.getElementById('toast'); document.getElementById('toastMsg').innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2700);}
+        
+        // Animated counters
+        function animateNumber(element, target) { let current=0; let step=target/40; let interval=setInterval(()=>{ current+=step; if(current>=target){ element.innerText=target.toLocaleString() + (element.getAttribute('data-suffix')||''); clearInterval(interval);} else element.innerText=Math.floor(current).toLocaleString(); }, 20);}
+        
+        // Stats cards data
+        const statsData = [
+            { label:"CA Total", value:1684200, icon:"fas fa-chart-line", color:"orange", suffix:" DA", prev:12.5 },
+            { label:"Profit Net", value:482500, icon:"fas fa-coins", color:"green", suffix:" DA", prev:8.2 },
+            { label:"Commandes", value:2850, icon:"fas fa-shopping-cart", color:"blue", suffix:"", prev:18 },
+            { label:"Clients", value:412, icon:"fas fa-users", color:"purple", suffix:"", prev:5.3 },
+            { label:"Produits vendus", value:8920, icon:"fas fa-boxes", color:"yellow", suffix:" unités", prev:22 },
+            { label:"Commandes aujourd'hui", value:24, icon:"fas fa-calendar-day", color:"red", suffix:"", prev:-2 },
+            { label:"Revenus mois", value:312000, icon:"fas fa-chart-simple", color:"indigo", suffix:" DA", prev:11 },
+            { label:"Taux conversion", value:3.8, icon:"fas fa-percent", color:"teal", suffix:"%", prev:0.4 }
+        ];
+        
+        function renderStats(){
+            let grid = document.getElementById('statsGrid');
+            if(!grid) return;
+            grid.innerHTML = statsData.map(s => `<div class="bg-gray-800 rounded-2xl p-5 card-hover border border-gray-700"><div class="flex justify-between"><i class="${s.icon} text-2xl text-${s.color}-400"></i><span class="text-xs text-gray-400">vs mois préc. ${s.prev>0? '+' : ''}${s.prev}%</span></div><h3 class="text-gray-400 text-sm mt-2">${s.label}</h3><div class="text-2xl font-bold mt-1 stat-val" data-target="${s.value}" data-suffix="${s.suffix}">0</div></div>`);
+            document.querySelectorAll('.stat-val').forEach(el=>{ let target=parseFloat(el.getAttribute('data-target')); animateNumber(el, target); });
+        }
+        
+        // Product stats rendering
+        function renderProductStats(){
+            let container = document.getElementById('productStatsTable');
+            let topSold = productPerformance.reduce((a,b)=> a.sold > b.sold ? a : b);
+            let topProfit = productPerformance.reduce((a,b)=> a.profit > b.profit ? a : b);
+            let lowPerf = productPerformance.find(p=>p.performance==='low') || productPerformance[3];
+            let outOfStock = productPerformance.filter(p=>p.stock<10);
+            container.innerHTML = `<div class="bg-gray-700/50 p-3 rounded"><span class="font-semibold">🏆 Plus vendu :</span> ${topSold.name} (${topSold.sold} unités)</div>
+            <div class="bg-gray-700/50 p-3 rounded"><span class="font-semibold">💰 Plus de bénéfice :</span> ${topProfit.name} → ${topProfit.profit.toLocaleString()} DA</div>
+            <div class="bg-gray-700/50 p-3 rounded"><span class="font-semibold">⚠️ Faible performance :</span> ${lowPerf.name} (${lowPerf.sold} vendus)</div>
+            <div class="bg-gray-700/50 p-3 rounded"><span class="font-semibold">📦 Rupture stock imminente :</span> ${outOfStock.map(p=>p.name).join(', ') || 'Aucun'}</div>
+            <div class="progress-bar mt-2"><span class="text-xs">Ventes Carton XL : ${Math.round((topSold.sold/1500)*100)}%</span><div class="w-full bg-gray-600 rounded-full h-2"><div class="bg-orange-500 h-2 rounded-full" style="width:${Math.round((topSold.sold/1500)*100)}%"></div></div></div>`;
+        }
+        
+        // CHARTS INIT
+        let lineChart, doughnutChart, hourlyBar, sourceChart;
+        function initCharts(){
+            const ctxLine = document.getElementById('salesLineChart').getContext('2d');
+            lineChart = new Chart(ctxLine, { type: 'line', data: { labels: Array(30).fill().map((_,i)=>`J${i+1}`), datasets: [{ label: 'Ventes (DA)', data: mockSalesHistory, borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: true } });
+            const ctxDoughnut = document.getElementById('topProductsDoughnut').getContext('2d');
+            doughnutChart = new Chart(ctxDoughnut, { type: 'doughnut', data: { labels: topProductsList.map(p=>p.name), datasets: [{ data: topProductsList.map(p=>p.units), backgroundColor: ['#F97316','#3B82F6','#8B5CF6'] }] } });
+            const ctxHour = document.getElementById('hourlyBarChart').getContext('2d');
+            hourlyBar = new Chart(ctxHour, { type: 'bar', data: { labels: Array(24).fill().map((_,i)=>`${i}h`), datasets: [{ label: 'Commandes', data: hourlyData, backgroundColor: '#F97316' }] } });
+            const ctxSource = document.getElementById('sourceDoughnut').getContext('2d');
+            sourceChart = new Chart(ctxSource, { type: 'doughnut', data: { labels: Object.keys(visitorsSource), datasets: [{ data: Object.values(visitorsSource), backgroundColor: ['#10B981','#F97316','#3B82F6','#A855F7'] }] } });
+        }
+        
+        // Orders Table dynamic with status updater
+        function renderOrders(){
+            let tbody = document.getElementById('ordersList');
+            tbody.innerHTML = orders.map(order => `<tr class="border-b border-gray-700"><td class="py-2">${order.id}</td><td>${order.client}</td><td>${order.amount.toLocaleString()} DA</td><td><select data-id="${order.id}" class="statusSelect bg-gray-700 rounded-full text-xs px-2 py-1"><option ${order.status==='en_attente'?'selected':''}>en_attente</option><option ${order.status==='confirmée'?'selected':''}>confirmée</option><option ${order.status==='expédiée'?'selected':''}>expédiée</option><option ${order.status==='livrée'?'selected':''}>livrée</option><option ${order.status==='annulée'?'selected':''}>annulée</option></select></td><td><button class="text-orange-400 viewOrderBtn" data-id="${order.id}"><i class="fas fa-eye"></i></button></td></tr>`);
+            document.querySelectorAll('.statusSelect').forEach(sel=>{ sel.addEventListener('change',(e)=>{ let id=sel.getAttribute('data-id'); let newStatus=e.target.value; let ord=orders.find(o=>o.id===id); if(ord){ ord.status=newStatus; showToast(`Commande ${id} → ${newStatus}`); renderOrders(); checkSmartAlerts(); } }); });
+            document.querySelectorAll('.viewOrderBtn').forEach(btn=>btn.addEventListener('click',()=>showToast("Timeline: commande en cours de préparation")));
+        }
+        
+        // Client analytics
+        function renderClientAnalysis(){
+            let loyal = clients.filter(c=>c.status==='fidèle').length;
+            let newClients = clients.filter(c=>c.status==='nouveau').length;
+            let inactif = clients.filter(c=>c.status==='inactif').length;
+            let totalSpentAll = clients.reduce((a,b)=>a+b.totalSpent,0);
+            document.getElementById('clientAnalytics').innerHTML = `
+                <div class="bg-gray-700 p-3 rounded"><i class="fas fa-crown text-yellow-500"></i> Clients fidèles: ${loyal}</div>
+                <div class="bg-gray-700 p-3 rounded"><i class="fas fa-user-plus text-green-500"></i> Nouveaux: ${newClients}</div>
+                <div class="bg-gray-700 p-3 rounded"><i class="fas fa-user-slash text-red-500"></i> Inactifs: ${inactif}</div>
+                <div class="bg-gray-700 p-3 rounded"><i class="fas fa-chart-line"></i> Dépense totale: ${totalSpentAll.toLocaleString()} DA</div>`;
+            let clientRows = clients.map(c=>`<tr><td>${c.name}</td><td>${c.totalSpent.toLocaleString()} DA</td><td>${c.orders} cmd</td><td>${c.lastOrder}</td><td><span class="badge-status ${c.status==='fidèle'?'bg-green-900 text-green-300':'bg-gray-600'}">${c.status}</span></td></tr>`).join('');
+            document.getElementById('clientTable').innerHTML = `<table class="w-full text-sm"><thead><tr class="border-b"><th>Client</th><th>Dépensé</th><th>Commandes</th><th>Dernière commande</th><th>Score</th></tr></thead><tbody>${clientRows}</tbody></table>`;
+        }
+        
+        // Insights intelligent + alertes
+        function checkSmartAlerts(){
+            let insightsDiv = document.getElementById('insightsContainer');
+            let topProduct = topProductsList[0];
+            let lowStock = productPerformance.filter(p=>p.stock<10).map(p=>p.name);
+            let bestHour = hourlyData.indexOf(Math.max(...hourlyData));
+            let alerts = [];
+            if(lowStock.length) alerts.push(`⚠️ Stock critique : ${lowStock.join(', ')}. Réapprovisionnez.`);
+            if(topProduct.units>1100) alerts.push(`🚀 ${topProduct.name} génère ${Math.round((topProduct.revenue/1684200)*100)}% du CA. Promouvoir!`);
+            if(orders.filter(o=>o.status==='en_attente').length>2) alerts.push(`📦 Commandes en attente: booster les confirmations.`);
+            alerts.push(`💡 Meilleure heure d'achat: ${bestHour}h - lancez des promotions à ce créneau.`);
+            insightsDiv.innerHTML = alerts.map(a=>`<div class="insight-card bg-gray-700/40 p-3 rounded-lg text-sm"><i class="fas fa-lightbulb text-orange-400 mr-2"></i>${a}</div>`).join('');
+            // Notifications auto
+            if(lowStock.length) showToast(`Alerte: Stock faible ${lowStock[0]}`);
+        }
+        
+        // EXPORT
+        document.getElementById('exportPdfBtn')?.addEventListener('click',()=>{ const element = document.querySelector('.p-6'); html2pdf().from(element).set({ margin: 0.5, filename: 'BoxPro_Rapport.pdf' }).save(); showToast("PDF généré"); });
+        document.getElementById('exportExcelBtn')?.addEventListener('click',()=>{ let wsData = orders.map(o=>[o.id, o.client, o.amount, o.status]); let ws = XLSX.utils.aoa_to_sheet([["ID","Client","Montant","Statut"],...wsData]); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Commandes"); XLSX.writeFile(wb, "commandes_boxpro.xlsx"); showToast("Excel exporté"); });
+        
+        // Global Search + filters
+        document.getElementById('globalSearch')?.addEventListener('input',function(e){ let val=e.target.value.toLowerCase(); let filteredOrders=orders.filter(o=>o.client.toLowerCase().includes(val)||o.id.toLowerCase().includes(val)); document.getElementById('ordersList').innerHTML = filteredOrders.map(order => `<tr><td>${order.id}</td><td>${order.client}</td><td>${order.amount} DA</td><td>${order.status}</td><td></td></tr>`).join(''); if(val==='') renderOrders(); });
+        document.getElementById('clientSearch')?.addEventListener('input',(e)=>{ let searchVal=e.target.value.toLowerCase(); let filteredClients=clients.filter(c=>c.name.toLowerCase().includes(searchVal)); document.getElementById('clientTable').innerHTML = `<table class="w-full text-sm"><tr><th>Nom</th><th>Dépenses</th><th>Commandes</th></tr>${filteredClients.map(c=>`<tr><td>${c.name}</td><td>${c.totalSpent} DA</td><td>${c.orders}</td></tr>`).join('')}</table>`; });
+        
+        // Dark mode / Mobile sidebar
+        let dark=true;
+        document.getElementById('darkModeToggle')?.addEventListener('click',()=>{ dark=!dark; document.body.classList.toggle('bg-white',!dark); document.body.classList.toggle('text-gray-900',!dark); showToast(dark?"Mode sombre":"Mode clair");});
+        document.getElementById('mobileMenuBtn')?.addEventListener('click',()=>{ let sb=document.getElementById('sidebar'); sb.classList.toggle('-translate-x-full'); });
+        
+        // Fake realtime Notifications interval
+        setInterval(()=>{ showToast(`📊 Mise à jour: ${Math.floor(Math.random()*10)+1} nouvelles commandes aujourd'hui`); }, 45000);
+        
+        // Initial Load
+        renderStats(); renderProductStats(); initCharts(); renderOrders(); renderClientAnalysis(); checkSmartAlerts();
+    </script>
+</body>
+</html>
