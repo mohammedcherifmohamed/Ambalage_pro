@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoxPro | CRM Clients</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0B1120; }
+        .toast-notify {
+            position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+            background: #1F2937; backdrop-filter: blur(8px); color: white;
+            padding: 12px 20px; border-radius: 40px; display: flex; align-items: center;
+            gap: 12px; transform: translateX(400px); transition: transform 0.3s ease;
+        }
+        .toast-notify.show { transform: translateX(0); }
+    </style>
+</head>
+<body class="text-gray-200">
+    <div id="toast" class="toast-notify"><svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span id="toastMsg">Notification</span></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-72 bg-gray-900/80 backdrop-blur-sm border-r border-gray-800 flex flex-col fixed h-full z-30">
+            <div class="p-6 border-b border-gray-800">
+                <div class="text-2xl font-bold"><span class="text-orange-500">Box</span><span class="text-white">Pro</span> <span class="text-xs text-gray-400">Admin</span></div>
+                <p class="text-xs text-gray-500 mt-1">Solutions d'emballage Algérie</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>Dashboard</a>
+                <a href="products.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>Produits</a>
+                <a href="orders.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>Commandes</a>
+                <a href="clients.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-600/20 text-orange-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>Clients</a>
+                <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>Analyses</a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 md:ml-72 overflow-y-auto">
+            <nav class="sticky top-0 z-20 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-6 py-4">
+                <h1 class="text-xl font-semibold">CRM - Gestion Clients</h1>
+            </nav>
+
+            <div class="p-6">
+                <!-- KPIs Clients -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8" id="clientKpis"></div>
+
+                <!-- Segmentation -->
+                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-4">Segmentation clients</h3>
+                        <canvas id="segmentationChart" height="200"></canvas>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-4">Top clients (par dépenses)</h3>
+                        <div id="topClientsList" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Liste clients -->
+                <div class="bg-gray-800/50 rounded-2xl border border-gray-700 overflow-hidden">
+                    <div class="p-4 border-b border-gray-700">
+                        <input type="text" id="searchClient" placeholder="Rechercher client..." class="bg-gray-700 rounded-lg px-4 py-2 w-full md:w-96">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-900/50">
+                                <tr><th class="p-4 text-left">Client</th><th class="p-4 text-left">Email</th><th class="p-4 text-left">Dépenses</th><th class="p-4 text-left">Commandes</th><th class="p-4 text-left">Segmentation</th><th class="p-4 text-left">Dernière commande</th></tr>
+                            </thead>
+                            <tbody id="clientsList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const clients = [
+            { id: 1, name: "SARL Emballec DZ", email: "contact@emballec.dz", spent: 124500, orders: 14, lastOrder: "2025-04-28", segment: "premium" },
+            { id: 2, name: "EURL TechBox", email: "tech@box.dz", spent: 78900, orders: 8, lastOrder: "2025-05-01", segment: "fidele" },
+            { id: 3, name: "Mega Distribution", email: "contact@mega.dz", spent: 203400, orders: 27, lastOrder: "2025-05-05", segment: "premium" },
+            { id: 4, name: "Startup Ecom Express", email: "startup@ecom.dz", spent: 45600, orders: 6, lastOrder: "2025-05-03", segment: "actif" },
+            { id: 5, name: "Sarl Mode Algérie", email: "mode@dz.com", spent: 3400, orders: 2, lastOrder: "2025-01-15", segment: "inactif" },
+            { id: 6, name: "LogiPack DZ", email: "logi@pack.dz", spent: 23400, orders: 5, lastOrder: "2025-04-20", segment: "actif" },
+            { id: 7, name: "Electro Store", email: "electro@store.dz", spent: 87600, orders: 11, lastOrder: "2025-05-02", segment: "fidele" }
+        ];
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function updateClientKpis() {
+            const total = clients.length;
+            const totalSpent = clients.reduce((sum, c) => sum + c.spent, 0);
+            const avgSpent = totalSpent / total;
+            const premium = clients.filter(c => c.segment === 'premium').length;
+            
+            document.getElementById('clientKpis').innerHTML = `
+                <div class="bg-gray-800 rounded-2xl p-5"><div class="text-3xl font-bold">${total}</div><div class="text-gray-400 text-sm">Clients actifs</div></div>
+                <div class="bg-gray-800 rounded-2xl p-5"><div class="text-3xl font-bold">${(totalSpent/1000).toFixed(0)}k DA</div><div class="text-gray-400 text-sm">CA généré</div></div>
+                <div class="bg-gray-800 rounded-2xl p-5"><div class="text-3xl font-bold">${Math.round(avgSpent).toLocaleString()} DA</div><div class="text-gray-400 text-sm">Dépense moyenne</div></div>
+                <div class="bg-gray-800 rounded-2xl p-5"><div class="text-3xl font-bold text-orange-400">${premium}</div><div class="text-gray-400 text-sm">Clients premium</div></div>
+            `;
+        }
+
+        function renderClients() {
+            const search = document.getElementById('searchClient').value.toLowerCase();
+            const filtered = clients.filter(c => c.name.toLowerCase().includes(search) || c.email.toLowerCase().includes(search));
+            
+            document.getElementById('clientsList').innerHTML = filtered.map(c => `
+                <tr class="border-b border-gray-700 hover:bg-gray-700/30">
+                    <td class="p-4 font-medium">${c.name}</td>
+                    <td class="p-4 text-gray-400">${c.email}</td>
+                    <td class="p-4 font-semibold">${c.spent.toLocaleString()} DA</td>
+                    <td class="p-4">${c.orders}</td>
+                    <td class="p-4"><span class="px-3 py-1 rounded-full text-xs ${c.segment === 'premium' ? 'bg-orange-900 text-orange-300' : c.segment === 'fidele' ? 'bg-green-900 text-green-300' : 'bg-gray-700'}">${c.segment}</span></td>
+                    <td class="p-4">${c.lastOrder}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateTopClients() {
+            const top5 = [...clients].sort((a,b) => b.spent - a.spent).slice(0,5);
+            document.getElementById('topClientsList').innerHTML = top5.map((c, i) => `
+                <div class="flex justify-between items-center p-3 bg-gray-700/30 rounded-lg">
+                    <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-bold">${i+1}</div><div><div class="font-medium">${c.name}</div><div class="text-xs text-gray-400">${c.orders} commandes</div></div></div>
+                    <div class="font-bold">${c.spent.toLocaleString()} DA</div>
+                </div>
+            `).join('');
+        }
+
+        function initSegmentationChart() {
+            const segments = { premium: clients.filter(c => c.segment === 'premium').length, fidele: clients.filter(c => c.segment === 'fidele').length, actif: clients.filter(c => c.segment === 'actif').length, inactif: clients.filter(c => c.segment === 'inactif').length };
+            const ctx = document.getElementById('segmentationChart').getContext('2d');
+            new Chart(ctx, { type: 'doughnut', data: { labels: ['Premium', 'Fidèle', 'Actif', 'Inactif'], datasets: [{ data: [segments.premium, segments.fidele, segments.actif, segments.inactif], backgroundColor: ['#F97316', '#10B981', '#3B82F6', '#6B7280'] }] }, options: { responsive: true } });
+        }
+
+        document.getElementById('searchClient').addEventListener('input', renderClients);
+        
+        updateClientKpis();
+        renderClients();
+        updateTopClients();
+        initSegmentationChart();
+    </script>
+</body>
+</html>

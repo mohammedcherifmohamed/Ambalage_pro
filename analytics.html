@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoxPro | Analytics Avancé</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0B1120; }
+        .toast-notify {
+            position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+            background: #1F2937; padding: 12px 20px; border-radius: 40px; display: flex; gap: 12px; transform: translateX(400px); transition: transform 0.3s ease;
+        }
+        .toast-notify.show { transform: translateX(0); }
+        .insight-card { border-left: 4px solid #F97316; }
+    </style>
+</head>
+<body class="text-gray-200">
+    <div id="toast" class="toast-notify"><svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span id="toastMsg">Analyse générée</span></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-72 bg-gray-900/80 backdrop-blur-sm border-r border-gray-800 flex flex-col fixed h-full z-30">
+            <div class="p-6 border-b border-gray-800">
+                <div class="text-2xl font-bold"><span class="text-orange-500">Box</span><span class="text-white">Pro</span> <span class="text-xs text-gray-400">Admin</span></div>
+                <p class="text-xs text-gray-500 mt-1">Solutions d'emballage Algérie</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Dashboard</a>
+                <a href="products.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Produits</a>
+                <a href="orders.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>Commandes</a>
+                <a href="clients.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Clients</a>
+                <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-600/20 text-orange-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analyses</a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 md:ml-72 overflow-y-auto">
+            <nav class="sticky top-0 z-20 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-6 py-4">
+                <h1 class="text-xl font-semibold">Analytics & Business Intelligence</h1>
+            </nav>
+
+            <div class="p-6">
+                <!-- Insights intelligents -->
+                <div class="bg-gradient-to-r from-orange-900/30 to-gray-800 rounded-2xl p-6 mb-8">
+                    <h3 class="text-lg font-semibold mb-3"> Insights stratégiques</h3>
+                    <div id="smartInsights" class="grid md:grid-cols-2 gap-4"></div>
+                </div>
+
+                <!-- Graphiques principaux -->
+                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-4"> Prévisions de ventes (30j)</h3>
+                        <canvas id="forecastChart" height="200"></canvas>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-4"> Performance par catégorie</h3>
+                        <canvas id="categoryPerformanceChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-3"> Taux de croissance</h3>
+                        <div id="growthMetrics" class="space-y-3"></div>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-3"> Recommandations produits</h3>
+                        <div id="recommendations" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-3"> Meilleurs créneaux</h3>
+                        <div id="bestTimes" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Export -->
+                <div class="flex justify-end gap-3">
+                    <button id="exportAnalyticsBtn" class="bg-orange-500 px-6 py-2 rounded-lg hover:bg-orange-600 transition">📊 Exporter rapport complet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const salesData = [12500, 14200, 13800, 21000, 24500, 23800, 29000, 32500, 34000, 37200, 41000, 39800, 42500, 46700, 51200];
+        const categories = { expedition: 456000, premium: 387000, electronique: 295000 };
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function generateInsights() {
+            const totalSales = salesData.reduce((a,b) => a+b, 0);
+            const avgSales = totalSales / salesData.length;
+            const bestCategory = Object.entries(categories).sort((a,b) => b[1] - a[1])[0];
+            const growth = ((salesData[salesData.length-1] - salesData[0]) / salesData[0] * 100).toFixed(1);
+            
+            document.getElementById('smartInsights').innerHTML = `
+                <div class="insight-card bg-gray-700/30 p-4 rounded-lg"><div class="font-bold text-orange-400"> Croissance projetée</div><div>+${growth}% sur 30j, tendance haussière soutenue</div></div>
+                <div class="insight-card bg-gray-700/30 p-4 rounded-lg"><div class="font-bold text-orange-400"> Catégorie star</div><div>${bestCategory[0]} génère ${Math.round((bestCategory[1]/Object.values(categories).reduce((a,b)=>a+b,0))*100)}% des revenus</div></div>
+                <div class="insight-card bg-gray-700/30 p-4 rounded-lg"><div class="font-bold text-orange-400"> CA moyen journalier</div><div>${Math.round(avgSales).toLocaleString()} DA → Objectif: ${Math.round(avgSales*1.15).toLocaleString()} DA</div></div>
+                <div class="insight-card bg-gray-700/30 p-4 rounded-lg"><div class="font-bold text-orange-400"> Opportunité</div><div>Lancez une promotion sur cartons électroniques pour booster les ventes B2B</div></div>
+            `;
+        }
+
+        function initCharts() {
+            const ctxForecast = document.getElementById('forecastChart').getContext('2d');
+            new Chart(ctxForecast, { type: 'line', data: { labels: Array(30).fill().map((_,i)=>`J${i+1}`), datasets: [{ label: 'Ventes projetées (k DA)', data: salesData.concat(Array(15).fill().map(()=>Math.random()*10000+40000)), borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true } });
+            
+            const ctxCategory = document.getElementById('categoryPerformanceChart').getContext('2d');
+            new Chart(ctxCategory, { type: 'bar', data: { labels: ['Expédition', 'Premium', 'Électronique'], datasets: [{ label: 'Revenus (k DA)', data: [456, 387, 295], backgroundColor: '#F97316', borderRadius: 8 }] } });
+        }
+
+        function updateGrowthMetrics() {
+            const monthly = [124000, 142000, 168000, 205000, 289000, 312000];
+            const growth = ((monthly[monthly.length-1] - monthly[monthly.length-2]) / monthly[monthly.length-2] * 100).toFixed(1);
+            document.getElementById('growthMetrics').innerHTML = `
+                <div class="flex justify-between"><span>Mois précédent</span><span class="font-semibold">289k DA</span></div>
+                <div class="flex justify-between"><span>Mois actuel</span><span class="font-semibold text-green-400">312k DA</span></div>
+                <div class="flex justify-between"><span>Croissance</span><span class="font-semibold text-orange-400">+${growth}%</span></div>
+                <div class="mt-2 pt-2 border-t border-gray-700"><div class="text-sm text-gray-400">Prévision mois prochain: 345k DA</div></div>
+            `;
+        }
+
+        function updateRecommendations() {
+            document.getElementById('recommendations').innerHTML = `
+                <div class="p-2 bg-gray-700/30 rounded"> Boîte Premium → en promos flash</div>
+                <div class="p-2 bg-gray-700/30 rounded"> Carton XL → augmentation stock requise</div>
+                <div class="p-2 bg-gray-700/30 rounded"> Pack économie B2B → lancer offer bundle</div>
+                <div class="p-2 bg-gray-700/30 rounded"> Campagne Instagram pour électronique</div>
+            `;
+        }
+
+        function updateBestTimes() {
+            document.getElementById('bestTimes').innerHTML = `
+                <div class="p-3 bg-gray-700/30 rounded-lg"><div class="font-bold">10h - 12h</div><div class="text-sm text-gray-400">+45% de commandes B2B</div></div>
+                <div class="p-3 bg-gray-700/30 rounded-lg"><div class="font-bold">15h - 17h</div><div class="text-sm text-gray-400">Pic commandes e-commerce</div></div>
+                <div class="p-3 bg-gray-700/30 rounded-lg"><div class="font-bold">Lundi & Mardi</div><div class="text-sm text-gray-400">Meilleurs jours lancement promo</div></div>
+            `;
+        }
+
+        document.getElementById('exportAnalyticsBtn').addEventListener('click', () => {
+            showToast('Rapport analytique exporté (simulation)');
+        });
+
+        generateInsights();
+        initCharts();
+        updateGrowthMetrics();
+        updateRecommendations();
+        updateBestTimes();
+    </script>
+</body>
+</html>

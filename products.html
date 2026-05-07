@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoxPro | Gestion des Produits</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0B1120; }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -12px rgba(0,0,0,0.4); }
+        .modal { transition: opacity 0.3s ease; }
+        .toast-notify {
+            position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+            background: #1F2937; backdrop-filter: blur(8px); color: white;
+            padding: 12px 20px; border-radius: 40px; display: flex; align-items: center;
+            gap: 12px; transform: translateX(400px); transition: transform 0.3s ease;
+        }
+        .toast-notify.show { transform: translateX(0); }
+    </style>
+</head>
+<body class="text-gray-200">
+    <div id="toast" class="toast-notify"><svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span id="toastMsg">Notification</span></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-gray-900/80 backdrop-blur-sm border-r border-gray-800 flex flex-col fixed h-full z-30">
+            <div class="p-6 border-b border-gray-800">
+                <div class="text-2xl font-bold"><span class="text-orange-500">Box</span><span class="text-white">Pro</span> <span class="text-xs text-gray-400">Admin</span></div>
+                <p class="text-xs text-gray-500 mt-1">Solutions d'emballage Algérie</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Dashboard
+                </a>
+                <a href="products.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-600/20 text-orange-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    Produits
+                </a>
+                <a href="orders.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    Commandes
+                </a>
+                <a href="clients.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Clients
+                </a>
+                <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Analyses
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 md:ml-72 overflow-y-auto">
+            <nav class="sticky top-0 z-20 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+                <h1 class="text-xl font-semibold">Gestion des Produits</h1>
+                <button id="addProductBtn" class="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg flex items-center gap-2 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Nouveau produit
+                </button>
+            </nav>
+
+            <div class="p-6">
+                <!-- Statistiques Produits -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8" id="productStats"></div>
+
+                <!-- Filtres et recherche -->
+                <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700 mb-6">
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex-1">
+                            <input type="text" id="searchProduct" placeholder="Rechercher un produit..." class="w-full bg-gray-700 rounded-lg px-4 py-2 text-sm">
+                        </div>
+                        <select id="categoryFilter" class="bg-gray-700 rounded-lg px-4 py-2 text-sm">
+                            <option value="all">Toutes catégories</option>
+                            <option value="expedition">Expédition</option>
+                            <option value="premium">Premium</option>
+                            <option value="electronique">Électronique</option>
+                        </select>
+                        <select id="stockFilter" class="bg-gray-700 rounded-lg px-4 py-2 text-sm">
+                            <option value="all">Tous les stocks</option>
+                            <option value="low">Stock faible (< 50)</option>
+                            <option value="out">Rupture</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tableau des produits -->
+                <div class="bg-gray-800/50 rounded-2xl border border-gray-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-900/50 border-b border-gray-700">
+                                <tr>
+                                    <th class="text-left p-4">Produit</th>
+                                    <th class="text-left p-4">Catégorie</th>
+                                    <th class="text-left p-4">Prix (DA)</th>
+                                    <th class="text-left p-4">Stock</th>
+                                    <th class="text-left p-4">Vendus</th>
+                                    <th class="text-left p-4">Revenus</th>
+                                    <th class="text-left p-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Graphiques supplémentaires -->
+                <div class="grid lg:grid-cols-2 gap-6 mt-8">
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-4">Performance par catégorie</h3>
+                        <canvas id="categoryChart" height="200"></canvas>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-2xl p-5 border border-gray-700">
+                        <h3 class="font-semibold mb-4">Top 5 produits par revenus</h3>
+                        <div id="topProductsList" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajout/Édition Produit -->
+    <div id="productModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4" id="modalTitle">Ajouter un produit</h2>
+            <div class="space-y-4">
+                <input type="text" id="prodName" placeholder="Nom du produit" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+                <select id="prodCategory" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+                    <option value="expedition">Expédition</option>
+                    <option value="premium">Premium</option>
+                    <option value="electronique">Électronique</option>
+                </select>
+                <input type="number" id="prodPrice" placeholder="Prix (DA)" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+                <input type="number" id="prodStock" placeholder="Quantité en stock" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+                <div class="flex gap-3">
+                    <button id="saveProductBtn" class="flex-1 bg-orange-500 py-2 rounded-lg">Enregistrer</button>
+                    <button id="closeModalBtn" class="flex-1 bg-gray-600 py-2 rounded-lg">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données mock produits
+        let products = [
+            { id: 1, name: "Carton XL Expédition", category: "expedition", price: 1250, stock: 342, sold: 890, revenue: 1112500 },
+            { id: 2, name: "Boîte Premium Noir", category: "premium", price: 890, stock: 45, sold: 1240, revenue: 1103600 },
+            { id: 3, name: "Carton Électronique Sécurisé", category: "electronique", price: 750, stock: 12, sold: 730, revenue: 547500 },
+            { id: 4, name: "Emballage Vêtements", category: "expedition", price: 590, stock: 3, sold: 210, revenue: 123900 },
+            { id: 5, name: "Carton Déménagement XXXL", category: "expedition", price: 2100, stock: 89, sold: 450, revenue: 945000 },
+            { id: 6, name: "Boîte Cadeau Luxe", category: "premium", price: 450, stock: 120, sold: 680, revenue: 306000 }
+        ];
+
+        let editingId = null;
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function updateStats() {
+            const totalProducts = products.length;
+            const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+            const lowStock = products.filter(p => p.stock < 50).length;
+            const totalRevenue = products.reduce((sum, p) => sum + p.revenue, 0);
+            
+            document.getElementById('productStats').innerHTML = `
+                <div class="bg-gray-800 rounded-2xl p-5 card-hover border border-gray-700">
+                    <svg class="w-8 h-8 text-orange-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    <div class="text-2xl font-bold">${totalProducts}</div>
+                    <div class="text-gray-400 text-sm">Total produits</div>
+                </div>
+                <div class="bg-gray-800 rounded-2xl p-5 card-hover border border-gray-700">
+                    <svg class="w-8 h-8 text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <div class="text-2xl font-bold">${totalStock}</div>
+                    <div class="text-gray-400 text-sm">Unités en stock</div>
+                </div>
+                <div class="bg-gray-800 rounded-2xl p-5 card-hover border border-gray-700">
+                    <svg class="w-8 h-8 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <div class="text-2xl font-bold">${lowStock}</div>
+                    <div class="text-gray-400 text-sm">Stock faible</div>
+                </div>
+                <div class="bg-gray-800 rounded-2xl p-5 card-hover border border-gray-700">
+                    <svg class="w-8 h-8 text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2"></path></svg>
+                    <div class="text-2xl font-bold">${(totalRevenue / 1000000).toFixed(1)}M DA</div>
+                    <div class="text-gray-400 text-sm">Revenus totaux</div>
+                </div>
+            `;
+        }
+
+        function renderProductsTable() {
+            const search = document.getElementById('searchProduct').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const stockFilter = document.getElementById('stockFilter').value;
+            
+            let filtered = products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(search);
+                const matchCategory = category === 'all' || p.category === category;
+                const matchStock = stockFilter === 'all' || (stockFilter === 'low' && p.stock < 50) || (stockFilter === 'out' && p.stock === 0);
+                return matchSearch && matchCategory && matchStock;
+            });
+            
+            document.getElementById('productsTableBody').innerHTML = filtered.map(p => `
+                <tr class="border-b border-gray-700 hover:bg-gray-700/30">
+                    <td class="p-4 font-medium">${p.name}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded-full text-xs ${p.category === 'premium' ? 'bg-purple-900 text-purple-300' : 'bg-blue-900 text-blue-300'}">${p.category}</span></td>
+                    <td class="p-4">${p.price.toLocaleString()} DA</td>
+                    <td class="p-4"><span class="${p.stock < 20 ? 'text-red-400 font-bold' : 'text-green-400'}">${p.stock}</span></td>
+                    <td class="p-4">${p.sold}</td>
+                    <td class="p-4">${(p.revenue / 1000).toFixed(0)}k DA</td>
+                    <td class="p-4">
+                        <button onclick="editProduct(${p.id})" class="text-blue-400 hover:text-blue-300 mr-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateCategoryChart() {
+            const categoryData = {
+                expedition: products.filter(p => p.category === 'expedition').reduce((sum, p) => sum + p.revenue, 0),
+                premium: products.filter(p => p.category === 'premium').reduce((sum, p) => sum + p.revenue, 0),
+                electronique: products.filter(p => p.category === 'electronique').reduce((sum, p) => sum + p.revenue, 0)
+            };
+            
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Expédition', 'Premium', 'Électronique'],
+                    datasets: [{
+                        label: 'Revenus (DA)',
+                        data: [categoryData.expedition, categoryData.premium, categoryData.electronique],
+                        backgroundColor: ['#F97316', '#8B5CF6', '#06B6D4'],
+                        borderRadius: 8
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true }
+            });
+        }
+
+        function updateTopProducts() {
+            const top5 = [...products].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+            document.getElementById('topProductsList').innerHTML = top5.map((p, i) => `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-bold">${i + 1}</div>
+                        <span>${p.name}</span>
+                    </div>
+                    <span class="font-semibold">${(p.revenue / 1000).toFixed(0)}k DA</span>
+                </div>
+            `).join('');
+        }
+
+        window.editProduct = (id) => {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                editingId = id;
+                document.getElementById('modalTitle').innerText = 'Modifier le produit';
+                document.getElementById('prodName').value = product.name;
+                document.getElementById('prodCategory').value = product.category;
+                document.getElementById('prodPrice').value = product.price;
+                document.getElementById('prodStock').value = product.stock;
+                document.getElementById('productModal').classList.remove('hidden');
+                document.getElementById('productModal').classList.add('flex');
+            }
+        };
+
+        window.deleteProduct = (id) => {
+            if (confirm('Supprimer ce produit ?')) {
+                products = products.filter(p => p.id !== id);
+                updateStats();
+                renderProductsTable();
+                updateCategoryChart();
+                updateTopProducts();
+                showToast('Produit supprimé');
+            }
+        };
+
+        document.getElementById('addProductBtn').addEventListener('click', () => {
+            editingId = null;
+            document.getElementById('modalTitle').innerText = 'Ajouter un produit';
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodCategory').value = 'expedition';
+            document.getElementById('prodPrice').value = '';
+            document.getElementById('prodStock').value = '';
+            document.getElementById('productModal').classList.remove('hidden');
+            document.getElementById('productModal').classList.add('flex');
+        });
+
+        document.getElementById('saveProductBtn').addEventListener('click', () => {
+            const name = document.getElementById('prodName').value;
+            const category = document.getElementById('prodCategory').value;
+            const price = parseInt(document.getElementById('prodPrice').value);
+            const stock = parseInt(document.getElementById('prodStock').value);
+            
+            if (!name || !price) {
+                showToast('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            if (editingId) {
+                const index = products.findIndex(p => p.id === editingId);
+                if (index !== -1) {
+                    products[index] = { ...products[index], name, category, price, stock };
+                    showToast('Produit modifié');
+                }
+            } else {
+                const newId = Math.max(...products.map(p => p.id)) + 1;
+                products.push({ id: newId, name, category, price, stock, sold: 0, revenue: 0 });
+                showToast('Produit ajouté');
+            }
+            
+            document.getElementById('productModal').classList.add('hidden');
+            updateStats();
+            renderProductsTable();
+            updateCategoryChart();
+            updateTopProducts();
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', () => {
+            document.getElementById('productModal').classList.add('hidden');
+        });
+
+        document.getElementById('searchProduct').addEventListener('input', renderProductsTable);
+        document.getElementById('categoryFilter').addEventListener('change', renderProductsTable);
+        document.getElementById('stockFilter').addEventListener('change', renderProductsTable);
+
+        // Initialisation
+        updateStats();
+        renderProductsTable();
+        updateCategoryChart();
+        updateTopProducts();
+    </script>
+</body>
+</html>
